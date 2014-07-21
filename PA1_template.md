@@ -10,13 +10,16 @@ actData <- read.csv("activity.csv")
 
 ```r
 actData$date <- as.Date(actData$date)
-head(actData, 2)
+head(actData, 5)
 ```
 
 ```
 ##   steps       date interval
 ## 1    NA 2012-10-01        0
 ## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
 ```
 
 ## What is mean total number of steps taken per day?
@@ -84,14 +87,30 @@ I will use the mean for the 5-minute interval for a missing Value.
 
 ```r
 mergedData <- merge(actData, intervalAvgData,by.x="interval",by.y="interval",all.x)
+head(mergedData, 5)
+```
+
+```
+##   interval steps       date avgSteps
+## 1        0    NA 2012-10-01    1.717
+## 2        0     0 2012-11-23    1.717
+## 3        0     0 2012-10-28    1.717
+## 4        0     0 2012-11-06    1.717
+## 5        0     0 2012-11-24    1.717
+```
+
+```r
 imputedData <- transform(mergedData, steps = ifelse(is.na(steps), avgSteps, steps))
-head(imputedData, 2)
+head(imputedData, 5)
 ```
 
 ```
 ##   interval steps       date avgSteps
 ## 1        0 1.717 2012-10-01    1.717
 ## 2        0 0.000 2012-11-23    1.717
+## 3        0 0.000 2012-10-28    1.717
+## 4        0 0.000 2012-11-06    1.717
+## 5        0 0.000 2012-11-24    1.717
 ```
 
 ### 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
@@ -120,3 +139,26 @@ median(imputedSumData$sumSteps)
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+### 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+```r
+actData$weekday <- ifelse(weekdays(actData$date) %in% c("Saturday","Sunday"), "weekend", "weekday")
+head(actData, 5)
+```
+
+```
+##   steps       date interval weekday
+## 1    NA 2012-10-01        0 weekday
+## 2    NA 2012-10-01        5 weekday
+## 3    NA 2012-10-01       10 weekday
+## 4    NA 2012-10-01       15 weekday
+## 5    NA 2012-10-01       20 weekday
+```
+### 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
+
+```r
+weeklyIntervalAvgData <- ddply(actData[realData,],c("weekday","interval"),summarize,avgSteps=mean(steps))
+qplot(interval, avgSteps, data=weeklyIntervalAvgData, facets=weekday~., geom="path", ylab="Number of steps", xlab="Interval")
+```
+
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
